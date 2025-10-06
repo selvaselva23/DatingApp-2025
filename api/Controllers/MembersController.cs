@@ -1,35 +1,45 @@
 using System.Collections.Immutable;
 using api.Data;
 using api.Entities;
+using api.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace api.Controllers
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class MembersController(AppDbContext appDbContext) : ControllerBase
+
+  [Authorize]
+    public class MembersController(IMemberRepository memberRepository) : BaseApiController
     {
 
         [HttpGet]
-        public async Task<ActionResult<IReadOnlyList<AppUser>>> GetMemebers()
+        public async Task<ActionResult<IReadOnlyList<Member>>> GetMemebers()
         {
-            var members = await appDbContext.User.ToListAsync();
-            return members;
+            return Ok(await memberRepository.GetMembersAsync());
+
         }
 
 
+
         [HttpGet("{id}")]
-        public async Task<ActionResult<AppUser>> GetMember(string id)
+        public async Task<ActionResult<Member>> GetMember(string id)
         {
-            var member = await appDbContext.User.FindAsync(id);
+            var member = await memberRepository.GetMemberByIdAsync(id);
 
             if (member == null)
             {
                 return NotFound();
             }
             return member;
+        }
+
+
+        [HttpGet("{id}/photos")]
+        public async Task<ActionResult<IReadOnlyList<Photo>>> GetMembersPhots(string id)
+        {
+            return Ok(await memberRepository.GetPhotosForMemberAsync(id));
         }
 
     }
