@@ -53,6 +53,9 @@ protected accountSercei = inject(AccountService);
         this.memberService.editMode.set(false);
         this.loading.set(false);
         this.photos.update(photos => [...photos,photo])
+        if(!this.memberService.member()?.imageurl){
+          this.setMainLocalPhoto(photo);
+        }
       },
       error: error =>{
         console.log('error uploading image ',error)
@@ -65,15 +68,7 @@ protected accountSercei = inject(AccountService);
   setMainPhoto(photo: Photo){
     this.memberService.setMainPhoto(photo).subscribe({
     next: ()=>{
-      const currentUser = this.accountSercei.currentUser();
-
-      if(currentUser) currentUser.imageUrl = photo.url;
-      this.accountSercei.setCurrentUser(currentUser as User);
-
-      this.memberService.member.update(member => ({
-        ...member,
-        imageurl:photo.url
-      }) as Member)
+      this.setMainLocalPhoto(photo)
       }
     })
   }
@@ -84,5 +79,16 @@ deletePhoto(photoId: number) {
         this.photos.update(photos => photos.filter(x => x.id !== photoId))
       }
     })
+  }
+
+
+   private setMainLocalPhoto(photo: Photo) {
+    const currentUser = this.accountSercei.currentUser();
+    if (currentUser) currentUser.imageUrl = photo.url;
+    this.accountSercei.setCurrentUser(currentUser as User);
+    this.memberService.member.update(member => ({
+      ...member,
+      imageurl: photo.url
+    }) as Member)
   }
 }
